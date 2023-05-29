@@ -1,8 +1,6 @@
-FROM  arm64v8/debian:latest
+FROM debian:latest
 
-SHELL ["/bin/bash", "-c"]
-RUN apt update
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     build-essential \
@@ -35,16 +33,3 @@ RUN mkdir /opt/igloo/build
 WORKDIR /opt/igloo/build
 RUN cmake ..
 RUN cmake --build . --target install
-
-# # Copy the source code into the container
-RUN mkdir -p /opt/library
-COPY ./common /opt/library/common
-COPY ./vendor /opt/library/vendor
-COPY ./specs /opt/library/specs
-COPY ./Makefile.debian /opt/library/Makefile
-COPY ./base.mk /opt/library/base.mk
-
-# Build the project
-WORKDIR /opt/library
-RUN make test && make run-test
-#RUN make && make install 

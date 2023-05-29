@@ -1,6 +1,8 @@
-FROM sickcodes/docker-osx:latest
+FROM ubuntu:latest
 
-RUN brew install -y \
+RUN echo "deb [signed-by=/usr/local/share/keyring/devkitpro-pub.gpg] https://apt.devkitpro.org stable main" > /etc/apt/sources.list.d/devkitpro.list
+RUN apt-get update
+RUN apt-get install -y \
     gcc \
     g++ \
     gcc-multilib \
@@ -21,7 +23,16 @@ RUN brew install -y \
     libtinyxml2-dev \
     tiled \
     valgrind \
-    liblua5.3-dev
+    liblua5.3-dev \
+    wget
+
+# Install NX development tools
+RUN mkdir -p /usr/local/share/keyring/
+RUN wget -O /usr/local/share/keyring/devkitpro-pub.gpg https://apt.devkitpro.org/devkitpro-pub.gpg
+RUN apt-get update && apt-get install apt-transport-https curl devkitpro-pacman -y
+RUN dkp-pacman -Syu --noconfirm
+RUN dkp-pacman -S wii-dev --noconfirm
+RUN dkp-pacman -S switch-dev --noconfirm
 
 # Install the Igloo testing framework
 RUN git clone --recursive https://github.com/codewars/igloo.git /opt/igloo
@@ -35,16 +46,3 @@ RUN mkdir /opt/igloo/build
 WORKDIR /opt/igloo/build
 RUN cmake ..
 RUN cmake --build . --target install
-
-# # Copy the source code into the container
-RUN mkdir -p /opt/library
-COPY ./common /opt/library/common
-COPY ./vendor /opt/library/vendor
-COPY ./specs /opt/library/specs
-COPY ./Makefile.macos /opt/library/Makefile
-COPY ./base.mk /opt/library/base.mk
-
-# Build the project
-WORKDIR /opt/library
-RUN make test && make run-test
-#RUN make && make install
